@@ -1,10 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/dbs.js';
-// import connectDB from './config/db.js';
+import authRoutes from './routes/AuthRoutes.js';
 
 dotenv.config();
 const app = express();
+
+app.use(express.json());
+app.use('/api/auth',authRoutes);
 
 app.get('/', (req, res) =>{
     res.status(200).json("hello")
