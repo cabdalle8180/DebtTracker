@@ -1,20 +1,32 @@
 import  { useState } from 'react';
 import { Link } from "react-router-dom";
+import { useDispatch,useSelector } from "react-redux";
+import { loginUser } from "../auth/authSlice";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const dispatch = useDispatch();
+    const [formError, setFormError] = useState("");
 
+// const {loading , error,user,token} = useSelector((state) => state.auth);
+const { loading ,error: reduxError, user, } = useSelector(
+  (state) => state.auth
+);
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.username || !formData.password) {
       setError('Fadlan buuxi dhammaan meelaha.');
       return;
     }
-    setError('');
-    console.log("Login Data:", formData);
+    setFormError("");
+    dispatch(loginUser(
+      {
+        username: formData.username,
+        password: formData.password
+      }
+    ));
   };
-
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl">
@@ -53,3 +65,29 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

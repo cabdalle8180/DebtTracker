@@ -1,6 +1,8 @@
-import  { useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Link } from "react-router-dom";
-
+import { useDispatch,useSelector } from "react-redux";
+import { registerUser } from "../auth/authSlice";
+import {useNavigate} from "react-router-dom";
 const SignUpPage = () => {
   const [formData, setFormData] = useState({ 
     fullName: '', 
@@ -10,7 +12,13 @@ const SignUpPage = () => {
     password: '' 
   });
   const [error, setError] = useState('');
+  const dispatch = useDispatch();
+    const [formError, setFormError] = useState("");
 
+const { loading ,error: reduxError, user, } = useSelector(
+  (state) => state.auth
+);
+const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -26,8 +34,21 @@ const SignUpPage = () => {
     
     setError('');
     console.log("SignUp Data:", formData);
-    alert('Account-kaaga waa la sameeyay!');
+    dispatch(registerUser({
+      fullName: formData.fullName,
+      username: formData.username,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password
+    }));
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate("/"); // Haddii diiwaangelintu guulaysato, u gudub bogga guriga
+    }
+
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
