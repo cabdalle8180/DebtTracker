@@ -23,7 +23,7 @@ const paymentSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: true,
-      min: 0,
+      min: 1,
     },
 
     paymentDate: {
@@ -31,11 +31,7 @@ const paymentSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Payment = mongoose.model("Payment", paymentSchema);
-
-export default Payment;
+export default mongoose.model("Payment", paymentSchema);

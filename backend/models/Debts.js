@@ -39,16 +39,10 @@ const debtSchema = new mongoose.Schema(
 
     remainingAmount: {
       type: Number,
-      default: function () {
-        return this.amount;
-      },
+      default: 0,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Debt = mongoose.model("Debt", debtSchema);
-
-export default Debt;
+export default mongoose.model("Debt", debtSchema);

@@ -1,4 +1,4 @@
-import Customer from "../models/Customer.js";
+import Customer from "../models/Customers.js";
 
 export const getCustomers = async (req, res) => {
   try {
@@ -6,7 +6,12 @@ export const getCustomers = async (req, res) => {
       userId: req.user._id,
     }).sort({ createdAt: -1 });
 
-    res.status(200).json(customers);
+    res.status(200).json({
+      message: "Customers retrieved successfully",
+      total: customers.length,
+      customers,
+    });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -15,6 +20,18 @@ export const getCustomers = async (req, res) => {
 export const createCustomer = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
+    if (!name || !phone || !address) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    // Check if customer with the same phone number already exists for the user
+    const existingCustomer = await Customer.findOne({
+      phone,
+      name,
+      userId: req.user._id,
+    });
+    if (existingCustomer) {
+      return res.status(400).json({ message: "Customer with this phone number and name already exists" });
+    }
 
     const customer = await Customer.create({
       name,
