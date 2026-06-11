@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import {useSelector} from "react-redux";
 
-export default function DashboardLayoutNoSidebar() {
+export default function OverviewTab() {
   const { user } = useSelector((state) => state.auth);
-  console.log("Authenticated user in DashboardLayoutNoSidebar:", user);
+  // console.log("Authenticated user in DashboardLayoutNoSidebar:", user);
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
       
