@@ -1,45 +1,26 @@
-// import LoginPage from "./pages/LoginPage"
-// import SignUpPage from "./pages/SignUpPage"
-// import { Routes, Route } from "react-router-dom";
-
-// function App() {
-//   return (
-//     <div className= "">
-//       <Routes>
-//         <Route path="/login" element={<LoginPage />} />
-//         <Route path="/signup" element={<SignUpPage />} />
-//       </Routes>
-
-//     </div>
-//   )
-// }
-
-// export default App
-
-
-
-
-
-
-
-
-
-
-
-
-
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
-import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
   return (
     <Routes>
-      <Route path="/dashboard" element={<DashboardPage/>} />
-      <Route path="/" element={<LoginPage />} />
+       {/* default route "/" */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+
+      {/* 🔒 Protected Route */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

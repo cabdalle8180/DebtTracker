@@ -45,7 +45,7 @@ const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
-      navigate("/"); // Haddii diiwaangelintu guulaysato, u gudub bogga guriga
+      navigate("/dashboard"); // Haddii diiwaangelintu guulaysato, u gudub bogga guriga
     }
 
   }, [user, navigate]);
