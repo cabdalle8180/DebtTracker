@@ -15,8 +15,11 @@ import {
   Star,
   Eye,
   Info,
+  Calendar,
+  CreditCard,
+  FileText,
 } from "lucide-react";
-import { apiFetch, formatCurrency, formatDate } from "../utils/api";
+import { apiFetch, formatCurrency, formatDate, statusClass, statusLabel } from "../utils/api";
 
 const STATUS_STYLES = {
   active: "bg-emerald-100 text-emerald-700",
@@ -44,6 +47,7 @@ const emptyForm = {
 export default function CustomersUI() {
   const [customers, setCustomers] = useState([]);
   const [debts, setDebts] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -75,9 +79,19 @@ export default function CustomersUI() {
     }
   };
 
+  const fetchPayments = async () => {
+    try {
+      const data = await apiFetch("/api/payments");
+      setPayments(data.payments || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
     fetchDebts();
+    fetchPayments();
   }, []);
 
   const totalRemainingAmount = debts.reduce(
@@ -186,6 +200,15 @@ export default function CustomersUI() {
           ? debt.customerId?._id
           : debt.customerId;
       return debtCustomerId === customerId;
+    });
+
+  const getCustomerPayments = (customerId) =>
+    payments.filter((payment) => {
+      const paymentCustomerId =
+        typeof payment.customerId === "object"
+          ? payment.customerId?._id
+          : payment.customerId;
+      return paymentCustomerId === customerId;
     });
 
   const filteredCustomers = customers.filter((customer) => {
@@ -463,123 +486,246 @@ export default function CustomersUI() {
       )}
 
       {/* Customer Detail Panel */}
-      {showDetail && selectedCustomer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex justify-end">
-          <div className="bg-white w-full max-w-lg h-full shadow-xl overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-slate-900">Customer Profile</h2>
-              <button onClick={() => setShowDetail(false)}>
-                <X className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
+      {showDetail && selectedCustomer && (() => {
+        const customerDebts = getCustomerDebts(selectedCustomer._id);
+        const customerPayments = getCustomerPayments(selectedCustomer._id);
+        const totalCustomerDebt = customerDebts.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+        const totalCustomerPaid = customerDebts.reduce((sum, d) => sum + Number(d.paidAmount || 0), 0);
+        const totalCustomerRemaining = customerDebts.reduce((sum, d) => sum + Number(d.remainingAmount || 0), 0);
 
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-emerald-100 text-emerald-700 font-bold text-xl rounded-2xl flex items-center justify-center">
-                  {selectedCustomer.name?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">{selectedCustomer.name}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${STATUS_STYLES[selectedCustomer.customerStatus]}`}>
-                    {selectedCustomer.customerStatus}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 text-sm">
-                <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-                  <Phone className="w-4 h-4 text-slate-400" />
-                  <span>{selectedCustomer.phone}</span>
-                </div>
-                {selectedCustomer.email && (
-                  <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-                    <Mail className="w-4 h-4 text-slate-400" />
-                    <span>{selectedCustomer.email}</span>
-                  </div>
-                )}
-                {selectedCustomer.address && (
-                  <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <span>{selectedCustomer.address}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase mb-2">Satisfaction Rating</p>
-                {renderStars(selectedCustomer.satisfactionRating)}
-              </div>
-
-              {selectedCustomer.importantInfo && (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-                  <p className="text-xs font-bold text-amber-700 uppercase mb-2 flex items-center gap-1">
-                    <Info className="w-3.5 h-3.5" />
-                    Important Information
-                  </p>
-                  <p className="text-sm text-amber-900">{selectedCustomer.importantInfo}</p>
-                </div>
-              )}
-
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase mb-3 flex items-center gap-1">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  Feedback History
-                </p>
-                {(selectedCustomer.feedbackLog || []).length === 0 ? (
-                  <p className="text-sm text-slate-400">No feedback recorded yet.</p>
-                ) : (
-                  <div className="space-y-3 max-h-48 overflow-y-auto">
-                    {selectedCustomer.feedbackLog.map((entry, i) => (
-                      <div key={i} className="border border-slate-100 rounded-xl p-3">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs font-bold text-slate-500 uppercase">{entry.type}</span>
-                          <span className="text-xs text-slate-400">{formatDate(entry.createdAt)}</span>
-                        </div>
-                        <p className="text-sm text-slate-700">{entry.message}</p>
-                        {entry.rating && <div className="mt-1">{renderStars(entry.rating)}</div>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <form onSubmit={handleFeedbackSubmit} className="border-t pt-4 space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase">Add Feedback / Note</p>
-                <select
-                  value={feedbackForm.type}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
-                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                >
-                  {FEEDBACK_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                <textarea
-                  required
-                  rows="3"
-                  placeholder="Customer feedback, complaints, praise, or internal notes..."
-                  value={feedbackForm.message}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
-                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm resize-none"
-                />
-                <select
-                  value={feedbackForm.rating}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, rating: e.target.value })}
-                  className="w-full border border-slate-200 p-2.5 rounded-xl text-sm"
-                >
-                  <option value="">Optional rating</option>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <option key={n} value={n}>{n} stars</option>
-                  ))}
-                </select>
-                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-semibold">
-                  Save Feedback
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex justify-end">
+            <div className="bg-white w-full max-w-lg h-full shadow-xl overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-slate-900">Customer Profile</h2>
+                <button onClick={() => setShowDetail(false)}>
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
-              </form>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Profile Header */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-emerald-100 text-emerald-700 font-bold text-xl rounded-2xl flex items-center justify-center">
+                    {selectedCustomer.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">{selectedCustomer.name}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${STATUS_STYLES[selectedCustomer.customerStatus]}`}>
+                      {selectedCustomer.customerStatus}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Section: Contact Details */}
+                <div className="space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Contact Info</p>
+                  <div className="grid grid-cols-1 gap-2.5 text-sm">
+                    <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
+                      <Phone className="w-4 h-4 text-slate-400" />
+                      <span className="font-mono text-xs">{selectedCustomer.phone}</span>
+                    </div>
+                    {selectedCustomer.email && (
+                      <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
+                        <Mail className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs">{selectedCustomer.email}</span>
+                      </div>
+                    )}
+                    {selectedCustomer.address && (
+                      <div className="flex items-center gap-2 p-2.5 bg-slate-50 rounded-xl">
+                        <MapPin className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs">{selectedCustomer.address}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section: Satisfaction Rating */}
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Satisfaction Rating</p>
+                  {renderStars(selectedCustomer.satisfactionRating)}
+                </div>
+
+                {/* Section: Important Information */}
+                {selectedCustomer.importantInfo && (
+                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                    <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Info className="w-3.5 h-3.5" />
+                      Important Information
+                    </p>
+                    <p className="text-sm text-amber-900 leading-relaxed">{selectedCustomer.importantInfo}</p>
+                  </div>
+                )}
+
+                {/* Section: Financial Summary */}
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Financial Overview</p>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl text-center">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Debt</p>
+                      <p className="text-xs font-black text-slate-800 mt-1">{formatCurrency(totalCustomerDebt)}</p>
+                    </div>
+                    <div className="bg-emerald-50/50 border border-emerald-100/50 p-3 rounded-xl text-center">
+                      <p className="text-[9px] font-bold text-emerald-700/80 uppercase tracking-wider">Total Paid</p>
+                      <p className="text-xs font-black text-emerald-600 mt-1">{formatCurrency(totalCustomerPaid)}</p>
+                    </div>
+                    <div className="bg-red-50/50 border border-red-100/50 p-3 rounded-xl text-center">
+                      <p className="text-[9px] font-bold text-red-700/80 uppercase tracking-wider">Remaining</p>
+                      <p className="text-xs font-black text-red-600 mt-1">{formatCurrency(totalCustomerRemaining)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section: Debts Log */}
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" />
+                    Debts Log ({customerDebts.length})
+                  </p>
+                  {customerDebts.length === 0 ? (
+                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <p className="text-xs text-slate-400 font-medium">No debts recorded.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                      {customerDebts.map((debt) => (
+                        <div key={debt._id} className="border border-slate-100 rounded-xl p-3 bg-white hover:bg-slate-50/50 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="text-xs font-bold text-slate-800">{debt.description}</h4>
+                              {debt.ref && (
+                                <span className="text-[9px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded mt-1 inline-block">
+                                  Ref: {debt.ref}
+                                </span>
+                              )}
+                            </div>
+                            <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full ${statusClass(debt.status)}`}>
+                              {statusLabel(debt.status)}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-[10px] border-t border-slate-50 pt-2 mt-2">
+                            <div>
+                              <span className="text-slate-400 text-[9px]">Original</span>
+                              <p className="font-semibold text-slate-700">{formatCurrency(debt.amount)}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[9px]">Paid</span>
+                              <p className="font-semibold text-emerald-600">{formatCurrency(debt.paidAmount)}</p>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 text-[9px]">Remaining</span>
+                              <p className="font-bold text-red-600">{formatCurrency(debt.remainingAmount)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 mt-2 text-[9px] text-slate-400">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>{formatDate(debt.date || debt.createdAt)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section: Payments Log */}
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    Payments Log ({customerPayments.length})
+                  </p>
+                  {customerPayments.length === 0 ? (
+                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <p className="text-xs text-slate-400 font-medium">No payments recorded.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                      {customerPayments.map((payment) => (
+                        <div key={payment._id} className="border border-slate-100 rounded-xl p-2.5 bg-white flex justify-between items-center hover:bg-slate-50/50 transition-colors">
+                          <div className="space-y-0.5">
+                            <p className="text-[11px] font-bold text-slate-800">
+                              {payment.debtId?.description ? `Payment for ${payment.debtId.description}` : "Payment received"}
+                            </p>
+                            <div className="flex items-center gap-1 text-[9px] text-slate-400">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>{formatDate(payment.paymentDate || payment.createdAt)}</span>
+                            </div>
+                          </div>
+                          <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                            +{formatCurrency(payment.amount)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Section: Feedback & Notes History */}
+                <div className="border-t border-slate-100 pt-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    Feedback & Notes History ({selectedCustomer.feedbackLog?.length || 0})
+                  </p>
+                  {(selectedCustomer.feedbackLog || []).length === 0 ? (
+                    <div className="text-center py-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <p className="text-xs text-slate-400 font-medium">No feedback recorded yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
+                      {selectedCustomer.feedbackLog.map((entry, i) => (
+                        <div key={i} className="border border-slate-100 rounded-xl p-3">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase">{entry.type}</span>
+                            <span className="text-[9px] text-slate-400">{formatDate(entry.createdAt)}</span>
+                          </div>
+                          <p className="text-xs text-slate-700 leading-relaxed">{entry.message}</p>
+                          {entry.rating && <div className="mt-1">{renderStars(entry.rating)}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Add Feedback Form */}
+                <form onSubmit={handleFeedbackSubmit} className="border-t border-slate-100 pt-4 space-y-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Add Feedback / Note</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={feedbackForm.type}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
+                      className="border border-slate-200 p-2 rounded-xl text-xs"
+                    >
+                      {FEEDBACK_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={feedbackForm.rating}
+                      onChange={(e) => setFeedbackForm({ ...feedbackForm, rating: e.target.value })}
+                      className="border border-slate-200 p-2 rounded-xl text-xs"
+                    >
+                      <option value="">Optional rating</option>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <option key={n} value={n}>{n} star{n > 1 ? "s" : ""}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <textarea
+                    required
+                    rows="2"
+                    placeholder="Customer feedback, complaints, praise, or internal notes..."
+                    value={feedbackForm.message}
+                    onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })}
+                    className="w-full border border-slate-200 p-2.5 rounded-xl text-xs resize-none"
+                  />
+                  <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold">
+                    Save Feedback
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
