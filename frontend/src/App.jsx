@@ -1,26 +1,40 @@
-import DashboardPage from "./pages/DashboardPage";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { Routes, Route, Navigate } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
+import OverviewTab from "./components/OverviewTab";
+import CustomersUI from "./components/CustomersUI";
+import DebtTab from "./components/DebtTab";
+import PaymentTab from "./components/PaymentTab";
+import ReportsPage from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
     <Routes>
-       {/* default route "/" */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
 
-      {/* 🔒 Protected Route */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="overview" replace />} />
+        <Route path="overview" element={<OverviewTab />} />
+        <Route path="customers" element={<CustomersUI />} />
+        <Route path="debts" element={<DebtTab />} />
+        <Route path="payments" element={<PaymentTab />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

@@ -1,10 +1,9 @@
 import Debt from "../models/Debts.js";
 
-// GET ALL DEBTS
 export const getDebts = async (req, res) => {
   try {
     const debts = await Debt.find({ userId: req.user._id })
-      .populate("customerId")
+      .populate("customerId", "name phone address")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -12,34 +11,38 @@ export const getDebts = async (req, res) => {
       total: debts.length,
       debts,
     });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// CREATE DEBT
 export const createDebt = async (req, res) => {
   try {
-    const { customerId, amount, description } = req.body;
+    const { customerId, amount, description, ref, date } = req.body;
+
+    if (!customerId || !amount || !description) {
+      return res.status(400).json({ message: "Customer, amount, and description are required" });
+    }
 
     const debt = await Debt.create({
       customerId,
-      amount,
+      amount: Number(amount),
       description,
+      ref: ref || `#INV-${Date.now().toString().slice(-6)}`,
+      date: date ? new Date(date) : new Date(),
       userId: req.user._id,
       paidAmount: 0,
-      remainingAmount: amount,
+      remainingAmount: Number(amount),
       status: "pending",
     });
 
-    res.status(201).json(debt);
+    const populated = await debt.populate("customerId", "name phone address");
+    res.status(201).json(populated);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
-// UPDATE DEBT
 export const updateDebt = async (req, res) => {
   try {
     const debt = await Debt.findById(req.params.id);
@@ -50,27 +53,37 @@ export const updateDebt = async (req, res) => {
       return res.status(403).json({ message: "Not allowed" });
     }
 
-    const { amount, description } = req.body;
+    const { customerId, amount, description, ref, date, status } = req.body;
 
-    if (amount !== undefined) debt.amount = amount;
+    if (customerId) debt.customerId = customerId;
     if (description !== undefined) debt.description = description;
+    if (ref !== undefined) debt.ref = ref;
+    if (date) debt.date = new Date(date);
 
-    // recompute
-    debt.remainingAmount = Math.max(0, debt.amount - debt.paidAmount);
+    if (amount !== undefined) {
+      debt.amount = Number(amount);
+      debt.remainingAmount = Math.max(0, debt.amount - debt.paidAmount);
+    }
 
-    if (debt.remainingAmount === 0) debt.status = "paid";
-    else if (debt.paidAmount > 0) debt.status = "partial";
-    else debt.status = "pending";
+    if (status === "paid") {
+      debt.paidAmount = debt.amount;
+      debt.remainingAmount = 0;
+      debt.status = "paid";
+    } else {
+      debt.remainingAmount = Math.max(0, debt.amount - debt.paidAmount);
+      if (debt.remainingAmount === 0) debt.status = "paid";
+      else if (debt.paidAmount > 0) debt.status = "partial";
+      else debt.status = "pending";
+    }
 
     const updated = await debt.save();
-
-    res.json(updated);
+    const populated = await updated.populate("customerId", "name phone address");
+    res.json(populated);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// DELETE DEBT
 export const deleteDebt = async (req, res) => {
   try {
     const debt = await Debt.findById(req.params.id);
@@ -82,7 +95,6 @@ export const deleteDebt = async (req, res) => {
     }
 
     await debt.deleteOne();
-
     res.json({ message: "Debt deleted" });
   } catch (err) {
     res.status(500).json({ message: err.message });

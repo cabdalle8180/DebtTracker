@@ -14,6 +14,17 @@ const debtSchema = new mongoose.Schema(
       trim: true,
     },
 
+    ref: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+
     status: {
       type: String,
       enum: ["pending", "partial", "paid"],

@@ -7,7 +7,8 @@ import {
   LogOut, 
   Plus, 
   TrendingUp, 
-  CheckCircle2 
+  CheckCircle2,
+  CreditCard
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -20,7 +21,8 @@ export default function Sidebar({
   const menuItems = [
     { id: 'overview', name: 'Overview', icon: LayoutDashboard },
     { id: 'customers', name: 'Customers', icon: Users },
-    { id: 'debt', name: 'Debt', icon: WalletCards },
+    { id: 'debts', name: 'Debts', icon: WalletCards },
+    { id: 'payments', name: 'Payments', icon: CreditCard },
     { id: 'reports', name: 'Reports', icon: BarChart3 },
   ];
 
