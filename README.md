@@ -8,21 +8,25 @@
 
 ## 📸 Screenshots
 
+### Login
+
+![Login](./screenshots/login.jpeg)
+
 ### Dashboard
 
-![Dashboard](./screenshots/dashboard.png)
+![Dashboard](./screenshots/dashboard.jpeg)
 
 ### Customers
 
-![Customers](./screenshots/customers.png)
+![Customers](./screenshots/customers.jpeg)
 
 ### Debts
 
-![Debts](./screenshots/debts.png)
+![Debts](./screenshots/debts.jpeg)
 
 ### Payments
 
-![Payments](./screenshots/payments.png)
+![Payments](./screenshots/payments.jpeg)
 
 ---
 
