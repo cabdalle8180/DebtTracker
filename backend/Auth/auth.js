@@ -1,8 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.js";
 import generateToken from "../utils/generateToken.js";
-
-
+import { sendSMS } from "../utils/sendSMS.js";
 
 export const register = async (req, res) => {
   try {
@@ -25,6 +24,11 @@ export const register = async (req, res) => {
       phone,
       password: hashedPassword,
     });
+
+    await sendSMS(
+  phone,
+  `Ku soo dhawoow ${fullName}. Waxaan kuugu hambalyeynaynaa in laguu aqbalay shaqada/shirka ICT-ga. Fadlan diyaar u noqo ka qaybgalka. ama laxiriir 619818075`
+);
 
     const token = generateToken(user);
 
