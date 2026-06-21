@@ -33,7 +33,7 @@ export default function ReportsPage() {
   const partialCount = debts.filter((d) => d.status === "partial").length;
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">

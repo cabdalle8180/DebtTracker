@@ -145,7 +145,7 @@ export default function OverviewTab() {
   }
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
         <p className="text-sm text-slate-500 mt-0.5">

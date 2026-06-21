@@ -8,6 +8,10 @@
 
 ## 📸 Screenshots
 
+### landingPage
+
+![ladinPage](./screenshots/landingPage.png)
+
 ### Login
 
 ![Login](./screenshots/login.jpeg)
@@ -288,7 +292,6 @@ Perfect for:
 
 ## 🔮 Future Improvements
 
-* SMS Notifications
 * Email Reminders
 * PDF Report Export
 * Multi-user Roles

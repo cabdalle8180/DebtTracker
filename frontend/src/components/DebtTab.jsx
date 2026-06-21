@@ -179,7 +179,7 @@ export default function DebtTab() {
   const selectedPaymentDebt = unpaidDebts.find((d) => d._id === paymentForm.debtId);
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 pb-4 border-b border-slate-200">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

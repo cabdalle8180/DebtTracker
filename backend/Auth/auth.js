@@ -27,7 +27,7 @@ export const register = async (req, res) => {
 
     await sendSMS(
   phone,
-  `Ku soo dhawoow ${fullName}. Waxaan kuugu hambalyeynaynaa in laguu aqbalay shaqada/shirka ICT-ga. Fadlan diyaar u noqo ka qaybgalka. ama laxiriir 619818075`
+  `Ku soo dhawoow ${fullName}. Akoonkaaga si guul leh ayaa loo sameeyay.`
 );
 
     const token = generateToken(user);

@@ -238,7 +238,7 @@ export default function CustomersUI() {
   };
 
   return (
-    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen font-sans">
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
