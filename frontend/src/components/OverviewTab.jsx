@@ -20,7 +20,10 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { apiFetch, formatCurrency, formatDate, statusLabel, statusClass } from "../utils/api";
+import { formatCurrency, formatDate, statusLabel, statusClass } from "../utils/api";
+import { customerService } from "../services/customerService";
+import { debtService } from "../services/debtService";
+import { paymentService } from "../services/paymentService";
 
 export default function OverviewTab() {
   const { user } = useSelector((state) => state.auth);
@@ -33,14 +36,14 @@ export default function OverviewTab() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [c, d, p] = await Promise.all([
-          apiFetch("/api/customers"),
-          apiFetch("/api/debts"),
-          apiFetch("/api/payments"),
+        const [customers, debts, payments] = await Promise.all([
+          customerService.getAll(),
+          debtService.getAll(),
+          paymentService.getAll(),
         ]);
-        setCustomers(c.customers || []);
-        setDebts(d.debts || []);
-        setPayments(p.payments || []);
+        setCustomers(customers);
+        setDebts(debts);
+        setPayments(payments);
       } catch (err) {
         console.error(err);
       } finally {
@@ -145,7 +148,7 @@ export default function OverviewTab() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen space-y-6">
+    <div className="p-8 bg-slate-50 min-h-screen space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
         <p className="text-sm text-slate-500 mt-0.5">

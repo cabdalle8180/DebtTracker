@@ -19,7 +19,10 @@ import {
   CreditCard,
   FileText,
 } from "lucide-react";
-import { apiFetch, formatCurrency, formatDate, statusClass, statusLabel } from "../utils/api";
+import { formatCurrency, formatDate, statusClass, statusLabel } from "../utils/api";
+import { customerService } from "../services/customerService";
+import { debtService } from "../services/debtService";
+import { paymentService } from "../services/paymentService";
 
 const STATUS_STYLES = {
   active: "bg-emerald-100 text-emerald-700",
@@ -63,8 +66,8 @@ export default function CustomersUI() {
 
   const fetchCustomers = async () => {
     try {
-      const data = await apiFetch("/api/customers");
-      setCustomers(data.customers || []);
+      const customers = await customerService.getAll();
+      setCustomers(customers);
     } catch (err) {
       console.error(err);
     }
@@ -72,8 +75,8 @@ export default function CustomersUI() {
 
   const fetchDebts = async () => {
     try {
-      const data = await apiFetch("/api/debts");
-      setDebts(data.debts || []);
+      const debts = await debtService.getAll();
+      setDebts(debts);
     } catch (err) {
       console.error(err);
     }
@@ -81,8 +84,8 @@ export default function CustomersUI() {
 
   const fetchPayments = async () => {
     try {
-      const data = await apiFetch("/api/payments");
-      setPayments(data.payments || []);
+      const payments = await paymentService.getAll();
+      setPayments(payments);
     } catch (err) {
       console.error(err);
     }
@@ -136,19 +139,21 @@ export default function CustomersUI() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = isEditing ? `/api/customers/${currentId}` : "/api/customers";
-    const method = isEditing ? "PUT" : "POST";
 
     try {
-      await apiFetch(url, {
-        method,
-        body: JSON.stringify({
-          ...form,
-          satisfactionRating: form.satisfactionRating
-            ? Number(form.satisfactionRating)
-            : null,
-        }),
-      });
+      const customerData = {
+        ...form,
+        satisfactionRating: form.satisfactionRating
+          ? Number(form.satisfactionRating)
+          : null,
+      };
+
+      if (isEditing) {
+        await customerService.update(currentId, customerData);
+      } else {
+        await customerService.create(customerData);
+      }
+
       await fetchCustomers();
       setShowModal(false);
     } catch (err) {
@@ -161,17 +166,13 @@ export default function CustomersUI() {
     if (!selectedCustomer) return;
 
     try {
-      const updated = await apiFetch(
-        `/api/customers/${selectedCustomer._id}/feedback`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            message: feedbackForm.message,
-            type: feedbackForm.type,
-            rating: feedbackForm.rating ? Number(feedbackForm.rating) : undefined,
-          }),
-        }
-      );
+      const feedbackData = {
+        message: feedbackForm.message,
+        type: feedbackForm.type,
+        rating: feedbackForm.rating ? Number(feedbackForm.rating) : undefined,
+      };
+      
+      const updated = await customerService.addFeedback(selectedCustomer._id, feedbackData);
       setSelectedCustomer(updated);
       setCustomers((prev) =>
         prev.map((c) => (c._id === updated._id ? updated : c))
@@ -185,7 +186,7 @@ export default function CustomersUI() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this customer?")) return;
     try {
-      await apiFetch(`/api/customers/${id}`, { method: "DELETE" });
+      await customerService.delete(id);
       setCustomers(customers.filter((c) => c._id !== id));
       if (selectedCustomer?._id === id) setShowDetail(false);
     } catch (err) {
@@ -238,7 +239,7 @@ export default function CustomersUI() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen font-sans">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen font-sans">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">

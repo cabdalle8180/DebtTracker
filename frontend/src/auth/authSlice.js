@@ -1,95 +1,52 @@
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { authService } from '../services/authService';
+import { getUser, getToken } from '../utils/api';
 
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
-// 🔐 LOGIN THUNK
+// Async thunks
 export const loginUser = createAsyncThunk(
-  "auth/loginUser",
-  async ({ username, password }, thunkAPI) => {
+  'auth/loginUser',
+  async (credentials, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return thunkAPI.rejectWithValue(data.message || "Login failed");
-      }
-
-      return data; // Waxaa laga filayaa { user, token }
+      return await authService.login(credentials);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+      return rejectWithValue(error.message);
     }
   }
 );
 
-// 🆕 REGISTER / SIGNUP
 export const registerUser = createAsyncThunk(
-  "auth/registerUser",
-  async ({ username, fullName, email, phone, password }, thunkAPI) => {
+  'auth/registerUser',
+  async (userData, { rejectWithValue }) => {
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          fullName,
-          email,
-          phone,
-          password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return thunkAPI.rejectWithValue(data.message || "Registration failed");
-      }
-
-      return data; 
+      return await authService.register(userData);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+      return rejectWithValue(error.message);
     }
   }
 );
-
-// 🔄 Hubi haddii xog hore ugu jirtay Browser-ka si aysan u tirtirmin marka la refresh gareeyo
-const storedUser = localStorage.getItem("user");
-const storedToken = localStorage.getItem("token");
 
 const initialState = {
-  user: storedUser ? JSON.parse(storedUser) : null,
-  token: storedToken || null,
+  user: getUser(),
+  token: getToken(),
   loading: false,
   error: null,
 };
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'auth',
   initialState,
-
   reducers: {
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
       state.loading = false;
       state.error = null;
-      
-      // 🗑️ Ka tirtir localStorage marka uu qofku Logout sameeyo
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      authService.logout();
     },
   },
-
   extraReducers: (builder) => {
     builder
-      // 🔐 LOGIN CASES
+      // Login cases
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -98,17 +55,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-
-        // 💾 Ku kaydi localStorage si xogtu u sii jirto
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-        localStorage.setItem("token", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // 🆕 SIGNUP CASES
+      // Register cases
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -117,10 +69,6 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-
-        // 💾 Sidoo kale ku kaydi halkan haddii aad rabto in qofku si toos ah u login galo kadib signup-ka
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
-        localStorage.setItem("token", action.payload.token);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;

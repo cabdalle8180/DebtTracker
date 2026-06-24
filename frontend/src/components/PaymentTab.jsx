@@ -7,7 +7,9 @@ import {
   Wallet,
   CheckCircle,
 } from "lucide-react";
-import { apiFetch, formatCurrency, formatDate } from "../utils/api";
+import { formatCurrency, formatDate } from "../utils/api";
+import { paymentService } from "../services/paymentService";
+import { debtService } from "../services/debtService";
 
 export default function PaymentTab() {
   const [payments, setPayments] = useState([]);
@@ -20,13 +22,13 @@ export default function PaymentTab() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [paymentData, debtData] = await Promise.all([
-        apiFetch("/api/payments"),
-        apiFetch("/api/debts"),
+      const [payments, debts] = await Promise.all([
+        paymentService.getAll(),
+        debtService.getAll(),
       ]);
-      setPayments(paymentData.payments || []);
+      setPayments(payments);
       setDebts(
-        (debtData.debts || []).filter(
+        debts.filter(
           (d) => d.status !== "paid" && d.remainingAmount > 0
         )
       );
@@ -53,12 +55,9 @@ export default function PaymentTab() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch("/api/payments", {
-        method: "POST",
-        body: JSON.stringify({
-          debtId: form.debtId,
-          amount: Number(form.amount),
-        }),
+      await paymentService.create({
+        debtId: form.debtId,
+        amount: Number(form.amount),
       });
       setShowModal(false);
       setForm({ debtId: "", amount: "" });
@@ -78,7 +77,7 @@ export default function PaymentTab() {
   });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
+    <div className="p-8 bg-slate-50 min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Payments</h1>

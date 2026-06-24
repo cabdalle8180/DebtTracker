@@ -5,7 +5,7 @@ export default function SettingsPage() {
   const { user } = useSelector((state) => state.auth);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
+    <div className="p-8 bg-slate-50 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
           <Settings className="w-8 h-8 text-emerald-600" />

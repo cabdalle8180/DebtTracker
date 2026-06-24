@@ -10,7 +10,10 @@ import {
   Search,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { apiFetch, formatCurrency, formatDate, statusLabel, statusClass } from "../utils/api";
+import { formatCurrency, formatDate, statusLabel, statusClass } from "../utils/api";
+import { debtService } from "../services/debtService";
+import { customerService } from "../services/customerService";
+import { paymentService } from "../services/paymentService";
 
 export default function DebtTab() {
   const [debts, setDebts] = useState([]);
@@ -38,8 +41,8 @@ export default function DebtTab() {
   const fetchDebts = async () => {
     setLoading(true);
     try {
-      const data = await apiFetch("/api/debts");
-      setDebts(data.debts || []);
+      const debts = await debtService.getAll();
+      setDebts(debts);
     } catch (err) {
       console.error(err);
     } finally {
@@ -49,8 +52,8 @@ export default function DebtTab() {
 
   const fetchCustomers = async () => {
     try {
-      const data = await apiFetch("/api/customers");
-      setCustomers(data.customers || []);
+      const customers = await customerService.getAll();
+      setCustomers(customers);
     } catch (err) {
       console.error(err);
     }
@@ -88,17 +91,17 @@ export default function DebtTab() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = editingDebt ? "PUT" : "POST";
-    const url = editingDebt ? `/api/debts/${editingDebt._id}` : "/api/debts";
+    const debtData = {
+      ...formData,
+      amount: Number(formData.amount),
+    };
 
     try {
-      await apiFetch(url, {
-        method,
-        body: JSON.stringify({
-          ...formData,
-          amount: Number(formData.amount),
-        }),
-      });
+      if (editingDebt) {
+        await debtService.update(editingDebt._id, debtData);
+      } else {
+        await debtService.create(debtData);
+      }
       setIsModalOpen(false);
       fetchDebts();
     } catch (err) {
@@ -109,7 +112,7 @@ export default function DebtTab() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this debt?")) return;
     try {
-      await apiFetch(`/api/debts/${id}`, { method: "DELETE" });
+      await debtService.delete(id);
       fetchDebts();
     } catch (err) {
       alert(err.message);
@@ -118,10 +121,7 @@ export default function DebtTab() {
 
   const handleMarkAsPaid = async (debt) => {
     try {
-      await apiFetch(`/api/debts/${debt._id}`, {
-        method: "PUT",
-        body: JSON.stringify({ status: "paid" }),
-      });
+      await debtService.markAsPaid(debt._id);
       fetchDebts();
     } catch (err) {
       alert(err.message);
@@ -131,12 +131,9 @@ export default function DebtTab() {
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch("/api/payments", {
-        method: "POST",
-        body: JSON.stringify({
-          debtId: paymentForm.debtId,
-          amount: Number(paymentForm.amount),
-        }),
+      await paymentService.create({
+        debtId: paymentForm.debtId,
+        amount: Number(paymentForm.amount),
       });
       setIsPaymentModalOpen(false);
       setPaymentForm({ debtId: "", amount: "" });
@@ -179,7 +176,7 @@ export default function DebtTab() {
   const selectedPaymentDebt = unpaidDebts.find((d) => d._id === paymentForm.debtId);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen">
+    <div className="p-8 bg-slate-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 pb-4 border-b border-slate-200">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
