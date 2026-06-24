@@ -5,9 +5,20 @@ import authRoutes from './routes/AuthRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import debtRoutes from './routes/debtRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
+import cors from "cors";
 
 dotenv.config();
 const app = express();
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+    //   "https://xisaabdeyn.vercel.app"
+      "https://debt-tracker-theta-beryl.vercel.app/"
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
