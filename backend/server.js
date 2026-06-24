@@ -12,9 +12,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
-    //   "https://xisaabdeyn.vercel.app"
-      "https://debt-tracker-theta-beryl.vercel.app/"
+      "https://debt-tracker-theta-beryl.vercel.app/",
+      "http://localhost:5173"
     ],
     credentials: true,
   })
