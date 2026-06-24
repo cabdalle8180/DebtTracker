@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../auth/authSlice";
 import { useNavigate } from "react-router-dom";
+import { getToken } from "../utils/api";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -10,12 +11,17 @@ const LoginPage = () => {
     password: "",
   });
   const navigate = useNavigate();
-  // const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  const { loading, user,error: reduxError } = useSelector(
+  const { loading, user, error: reduxError } = useSelector(
     (state) => state.auth
   );
+
+  // Check if user is already logged in
+  const token = getToken();
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();

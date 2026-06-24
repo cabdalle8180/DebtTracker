@@ -1,8 +1,9 @@
 import  { useEffect, useState } from 'react';
-import { Link } from "react-router-dom";
-import { useDispatch,useSelector } from "react-redux";
+import { Link, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../auth/authSlice";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { getToken } from "../utils/api";
 const SignUpPage = () => {
   const [formData, setFormData] = useState({ 
     fullName: '', 
@@ -13,12 +14,18 @@ const SignUpPage = () => {
   });
   const [error, setError] = useState('');
   const dispatch = useDispatch();
-    const [formError, setFormError] = useState("");
+  const [formError, setFormError] = useState("");
 
-const { loading ,error: reduxError, user, } = useSelector(
-  (state) => state.auth
-);
-const navigate = useNavigate();
+  const { loading, error: reduxError, user } = useSelector(
+    (state) => state.auth
+  );
+  const navigate = useNavigate();
+
+  // Check if user is already logged in
+  const token = getToken();
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
   const handleSubmit = (e) => {
     e.preventDefault();
     
