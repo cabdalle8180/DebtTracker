@@ -28,22 +28,18 @@ export async function apiFetch(path, options = {}) {
 
   const url = `${API_BASE_URL}${path}`;
 
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
 
-    const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
-    }
-
-    return data;
-  } catch (error) {
-    throw error;
+  if (!response.ok) {
+    throw new Error(data.message || 'Request failed');
   }
+
+  return data;
 }
 
 // Utility functions

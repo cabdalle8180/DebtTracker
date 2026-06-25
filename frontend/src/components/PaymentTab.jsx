@@ -40,7 +40,22 @@ export default function PaymentTab() {
   };
 
   useEffect(() => {
-    fetchData();
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [paymentsData, debtsData] = await Promise.all([
+          paymentService.getAll(),
+          debtService.getAll(),
+        ]);
+        setPayments(paymentsData);
+        setDebts(debtsData.filter((d) => d.status !== "paid" && d.remainingAmount > 0));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const totalCollected = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
@@ -77,15 +92,15 @@ export default function PaymentTab() {
   });
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Payments</h1>
           <p className="text-slate-500 text-sm mt-1">Record and track customer payments.</p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold"
+          className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-all"
         >
           <Plus className="w-4 h-4" />
           Record Payment

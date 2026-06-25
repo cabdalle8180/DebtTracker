@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { BarChart3, Download } from "lucide-react";
-import { apiFetch, formatCurrency } from "../utils/api";
+import { formatCurrency } from "../utils/api";
+import { debtService } from "../services/debtService";
+import { paymentService } from "../services/paymentService";
 
 export default function ReportsPage() {
   const [debts, setDebts] = useState([]);
@@ -10,12 +12,12 @@ export default function ReportsPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [debtData, paymentData] = await Promise.all([
-          apiFetch("/api/debts"),
-          apiFetch("/api/payments"),
+        const [debtsList, paymentsList] = await Promise.all([
+          debtService.getAll(),
+          paymentService.getAll(),
         ]);
-        setDebts(debtData.debts || []);
-        setPayments(paymentData.payments || []);
+        setDebts(debtsList || []);
+        setPayments(paymentsList || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -33,8 +35,8 @@ export default function ReportsPage() {
   const partialCount = debts.filter((d) => d.status === "partial").length;
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
-      <div className="flex justify-between items-start mb-8">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
             <BarChart3 className="w-8 h-8 text-emerald-600" />
@@ -42,7 +44,7 @@ export default function ReportsPage() {
           </h1>
           <p className="text-slate-500 text-sm mt-1">Summary of debts and collections.</p>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50">
+        <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 w-full sm:w-auto transition-all">
           <Download className="w-4 h-4" />
           Export
         </button>

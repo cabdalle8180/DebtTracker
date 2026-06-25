@@ -50,18 +50,23 @@ export default function DebtTab() {
     }
   };
 
-  const fetchCustomers = async () => {
-    try {
-      const customers = await customerService.getAll();
-      setCustomers(customers);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchDebts();
-    fetchCustomers();
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [debtsData, customersData] = await Promise.all([
+          debtService.getAll(),
+          customerService.getAll(),
+        ]);
+        setDebts(debtsData);
+        setCustomers(customersData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const totalOutstanding = debts.reduce((sum, item) => sum + (item.remainingAmount || 0), 0);
@@ -176,9 +181,9 @@ export default function DebtTab() {
   const selectedPaymentDebt = unpaidDebts.find((d) => d._id === paymentForm.debtId);
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 pb-4 border-b border-slate-200">
-        <div className="relative w-full md:max-w-md">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 mb-8 pb-4 border-b border-slate-200">
+        <div className="relative w-full sm:max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
@@ -188,16 +193,16 @@ export default function DebtTab() {
             className="w-full bg-slate-100 border border-slate-200 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => setIsPaymentModalOpen(true)}
-            className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold"
+            className="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-center"
           >
             Record Payment
           </button>
           <button
             onClick={() => openModal()}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold"
+            className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold transition-all"
           >
             <Plus className="w-4 h-4" />
             Add New Debt

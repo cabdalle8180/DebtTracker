@@ -5,6 +5,7 @@ import { registerUser } from "../auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../utils/api";
 const SignUpPage = () => {
+  // All hooks first!
   const [formData, setFormData] = useState({ 
     fullName: '', 
     username: '', 
@@ -14,18 +15,11 @@ const SignUpPage = () => {
   });
   const [error, setError] = useState('');
   const dispatch = useDispatch();
-  const [formError, setFormError] = useState("");
-
   const { loading, error: reduxError, user } = useSelector(
     (state) => state.auth
   );
   const navigate = useNavigate();
-
-  // Check if user is already logged in
   const token = getToken();
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -54,8 +48,12 @@ const SignUpPage = () => {
     if (user) {
       navigate("/dashboard"); // Haddii diiwaangelintu guulaysato, u gudub bogga guriga
     }
-
   }, [user, navigate]);
+
+  // Check if user is already logged in
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -69,7 +67,7 @@ const SignUpPage = () => {
         </div>
         <h2 className="text-2xl font-bold text-white mb-2 text-center">Account Cusub</h2>
         
-        {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
+        {(error || reduxError) && <p className="text-red-400 text-sm text-center mb-4">{error || reduxError}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-2">
           <input 
@@ -98,8 +96,11 @@ const SignUpPage = () => {
             onChange={(e) => setFormData({...formData, password: e.target.value})}
           />
           
-          <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition">
-            Create Account
+          <button 
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Create Account"}
           </button>
         </form>
 

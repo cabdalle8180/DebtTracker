@@ -25,10 +25,13 @@ export const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    await sendSMS(
-  phone,
-  `Ku soo dhawoow ${fullName}. Akoonkaaga si guul leh ayaa loo sameeyay.`
-);
+    // Send SMS asynchronously without blocking
+    sendSMS(
+      phone,
+      `Ku soo dhawoow ${fullName}. Akoonkaaga si guul leh ayaa loo sameeyay.`
+    ).catch((err) => {
+      console.error("Failed to send SMS (non-blocking error):", err.message);
+    });
 
     const token = generateToken(user);
 

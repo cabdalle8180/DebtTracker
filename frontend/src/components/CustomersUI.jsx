@@ -73,28 +73,22 @@ export default function CustomersUI() {
     }
   };
 
-  const fetchDebts = async () => {
-    try {
-      const debts = await debtService.getAll();
-      setDebts(debts);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchPayments = async () => {
-    try {
-      const payments = await paymentService.getAll();
-      setPayments(payments);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchCustomers();
-    fetchDebts();
-    fetchPayments();
+    const loadData = async () => {
+      try {
+        const [customersData, debtsData, paymentsData] = await Promise.all([
+          customerService.getAll(),
+          debtService.getAll(),
+          paymentService.getAll(),
+        ]);
+        setCustomers(customersData);
+        setDebts(debtsData);
+        setPayments(paymentsData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadData();
   }, []);
 
   const totalRemainingAmount = debts.reduce(

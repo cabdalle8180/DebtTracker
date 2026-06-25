@@ -6,22 +6,23 @@ import { useNavigate } from "react-router-dom";
 import { getToken } from "../utils/api";
 
 const LoginPage = () => {
+  // All hooks first!
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const { loading, user, error: reduxError } = useSelector(
     (state) => state.auth
   );
-
-  // Check if user is already logged in
   const token = getToken();
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
+
+  useEffect(() => {
+    if (user){
+      navigate("/dashboard")
+    }
+  }, [user, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -32,12 +33,11 @@ const LoginPage = () => {
 
     dispatch(loginUser(formData));
   };
-// useEffect 
-useEffect(() => {
-  if (user){
-    navigate("/dashboard")
+
+  // Check if user is already logged in
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
   }
-}, [user, navigate])
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
